@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#12a08a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="单词本">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+<title>单词本</title>
+</head>
+<body>
+<div id="app">
+  <main id="view"></main>
+  <nav id="tabs">
+    <button class="tab active" data-act="tab" data-tab="today"><span class="ico">📖</span>今日</button>
+    <button class="tab" data-act="tab" data-tab="add"><span class="ico">➕</span>加词</button>
+    <button class="tab" data-act="tab" data-tab="library"><span class="ico">📚</span>词库</button>
+    <button class="tab" data-act="tab" data-tab="stats"><span class="ico">📊</span>统计</button>
+    <button class="tab" data-act="tab" data-tab="settings"><span class="ico">⚙️</span>设置</button>
+  </nav>
+</div>
+<div id="toast"></div>
+<div id="modal" class="modal-mask hidden"></div>
+<script src="srs.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
