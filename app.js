@@ -280,7 +280,7 @@
     var pct = Math.round(done / Math.max(1, done + remain) * 100);
 
     var h = '';
-    h += '<div class="row between mb"><span class="small muted">' + (w.state === 'new' ? '新词' : '复习') + ' · ' + esc(w.tag || '') + '</span>';
+    h += '<div class="row between mb"><span class="small muted">' + (w.state === 'new' ? '新词' : '复习') + (w.tag ? ' · ' + esc(w.tag) : '') + '</span>';
     h += '<span class="small muted">' + done + ' / ' + (done + remain) + '</span></div>';
     h += '<div class="progress mb"><i style="width:' + pct + '%"></i></div>';
 
