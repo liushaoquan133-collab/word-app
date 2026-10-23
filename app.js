@@ -139,8 +139,9 @@
     if (!line) return null;
     line = line.replace(/^[\s\-–—•·*]+/, '').replace(/^\d{1,3}[\.、)）]\s*/, '').replace(/^[（(]\d+[)）]\s*/, '');
     if (!line) return null;
-    // 标题行（Unit 1 / Lesson 3）不是单词，跳过
-    if (/^(unit|lesson|module|chapter|part|section|list|book)\s*\d+\s*$/i.test(line)) return null;
+    // 标题行不是单词：Unit 1 / Lesson 3 / Module 2 Test / 第 2 单元 / Part 4 词汇表
+    if (/^(unit|lesson|module|chapter|part|section|list|book)\s*\d+/i.test(line)) return null;
+    if (/^第\s*[0-9一二三四五六七八九十]+\s*[单元课讲节]/.test(line)) return null;
 
     var idx = line.search(/[\u4e00-\u9fa5]/);
     var head = idx >= 0 ? line.slice(0, idx) : line;
