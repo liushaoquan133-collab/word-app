@@ -3,7 +3,7 @@
    - 页面导航：网络优先，断网回落到缓存的 index.html（保证改版后能拿到新 HTML）
    - 其他静态资源：先用缓存立即响应，同时后台更新（下次打开就是新版）
    改资源文件后，版本号 +1，老缓存会在 activate 时清掉。 */
-const CACHE = 'danci-v5';
+const CACHE = 'danci-v6';
 const ASSETS = [
   './',
   './index.html',
