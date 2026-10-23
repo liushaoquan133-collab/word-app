@@ -109,7 +109,7 @@ node tools/live-check.js  # 线上验收：对已部署的 https 地址跑同一
 node tools/parse-check.js # 词单解析：跑 test/fixtures 下的真实 A 级样本，打印每行解析结果
 ```
 
-**最近一次实测（2026-10-24）**：单元测试 23/23；`flow.js` 在 390 和 414 两档各 60 项断言全过（跑 414：`$env:VW='414'; node tools/flow.js`）；`audit.js` 5 种宽度 × 14 个界面共 70 个场景，页面级横向溢出 0、元素超宽 0；`pwa-check.js` installabilityErrors 为空、SW 已接管、断网可开；`chips-check.js` 词库筛选 6 个胶囊两行排开、全部在视口内（390/414 都是 0 横向滚动）。
+**最近一次实测（2026-10-24）**：单元测试 23/23；`flow.js` 在 390 和 414 两档各 64 项断言全过（跑 414：`$env:VW='414'; node tools/flow.js`，跑线上：`$env:BASE='https://liushaoquan133-collab.github.io/word-app/'; node tools/flow.js`）；`audit.js` 5 种宽度 × 14 个界面共 70 个场景，页面级横向溢出 0、元素超宽 0；`pwa-check.js` 在 https 线上站点 `installabilityErrors` 为空、SW 已接管、断网可开；`chips-check.js` 词库筛选 6 个胶囊两行排开、全部在视口内（390/414 都是 0 横向滚动）。
 
 **发布到线上**（GitHub Pages，仓库 `liushaoquan133-collab/word-app`，main 分支根目录）：
 
@@ -123,10 +123,11 @@ pwsh tools/deploy.ps1 "fix: 这次改了什么"
 
 > 线上地址：https://liushaoquan133-collab.github.io/word-app/
 
-**2026-10-24 修的两个真 bug**：
+**2026-10-24 修的三个真 bug**：
 
 1. **390 宽右侧被裁**：根因是词库筛选条 6 个胶囊 `white-space:nowrap` 一字排开共 492px，在 390/414 下右边两个（已掌握/暂停）被裁。已改成 `flex-wrap: wrap` 两行排开；另给 `.word-s` / `.preview .w` / `.modal h3` 加断词，并保留 `html { overflow-x: clip }` 兜底。
-2. **SW 缓存把新版挡住**：`CACHE` 原来叫 `danci-v1`，改了 `app.css` 老用户还是旧样式。现已升到 `danci-v3`（本次改 css/js 后），静态资源是「先用缓存、后台更新」，下次打开就是新版。
+2. **SW 缓存把新版挡住**：`CACHE` 原来叫 `danci-v1`，改了 `app.css` 老用户还是旧样式。现已升到 `danci-v4`（本次改 css/js 后），静态资源是「先用缓存、后台更新」，下次打开就是新版。
+3. **三档按钮的时间是写死的**：复习词点「忘记」原来也提示「1 分钟后」，实际是 10 分钟。现在按钮下的小字用 `previewNext()` 拿副本跑一遍 SRS 算真实间隔（忘记/模糊/认识各算各的），不再误导。
 
 **改完资源文件记得把 `sw.js` 的 `CACHE` 版本号 +1**，不然手机上第一次打开还是旧文件。
 
