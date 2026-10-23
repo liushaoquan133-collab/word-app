@@ -67,26 +67,69 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1800);
   }
+  // APK 外壳里 WebView 不支持 speechSynthesis，走原生 TTS 桥（MainActivity 注入 AndroidTTS）
+  function nativeTts() {
+    return (typeof window !== 'undefined' && window.AndroidTTS && typeof window.AndroidTTS.speak === 'function')
+      ? window.AndroidTTS : null;
+  }
+  function bridgeStatus(bridge) {
+    try { return (typeof bridge.status === 'function') ? bridge.status() : 'ok'; }
+    catch (e) { return 'ok'; }
+  }
+  // 浏览器语音：PWA 走这条；APK 里 WebView 没有这个 API，返回 false
+  function speakWithBrowser(text) {
+    if (!('speechSynthesis' in window)) return false;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US';
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+      return true;
+    } catch (e) { return false; }
+  }
+  // 原生 TTS 不可用时，按原因给不同提示（全哥要求：两种原因不能混成一句）
+  function ttsFailHint(st) {
+    if (st === 'no_engine') return '手机没有语音引擎，去「设置 → 系统 → 语音引擎」装一个';
+    if (st === 'no_english') return '语音引擎缺英文语音包，去「设置 → 系统 → 语音引擎」下载英文';
+    return '';
+  }
+  // 桥刚注入时系统 TTS 还在初始化（status=init）：等它就绪再读，别让第一张卡静默没声
+  function speakViaBridge(bridge, text, tries) {
+    if (tries === undefined) tries = 12;
+    var st = bridgeStatus(bridge);
+    if (st === 'ok') {
+      try { bridge.speak(text); return 'ok'; } catch (e) { return 'error'; }
+    }
+    if (st === 'init' && tries > 0) {
+      setTimeout(function () { speakViaBridge(nativeTts() || bridge, text, tries - 1); }, 250);
+      return 'queued';
+    }
+    return st === 'init' ? 'timeout' : st; // no_engine / no_english / timeout / error
+  }
   function speak(text) {
     if (!db.settings.autoPlay) return;
-    if (!('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* ignore */ }
+    var bridge = nativeTts();
+    if (bridge) {
+      var r = speakViaBridge(bridge, text);
+      if (r === 'ok' || r === 'queued') return;
+      // 自动播放不弹提示，交给浏览器语音兜底（APK 里通常也没有，静默即可）
+      speakWithBrowser(text);
+      return;
+    }
+    speakWithBrowser(text);
   }
   function speakNow(text) {
-    if (!('speechSynthesis' in window)) { toast('这个浏览器不支持发音'); return; }
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
-    } catch (e) { toast('发音失败'); }
+    var bridge = nativeTts();
+    var hint = '';
+    if (bridge) {
+      var r = speakViaBridge(bridge, text);
+      if (r === 'ok' || r === 'queued') return;
+      hint = ttsFailHint(r);
+    }
+    var ok = speakWithBrowser(text);
+    if (hint) { toast(ok ? hint : hint + '（浏览器语音也用不了）'); return; }
+    if (!ok) { toast('这个手机发不出声音，检查系统语音设置'); }
   }
 
   /* ---------- 队列 ---------- */
@@ -791,7 +834,9 @@
     if (st) st.innerHTML = '<div class="empty"><span class="emoji">📖</span>加载中…</div>';
     ensureDay();
     render();
-    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    // APK 外壳（appassets）里 SW 的脚本请求不走 AssetLoader，注册必然失败，直接跳过
+    var inAppShell = /appassets\.androidplatform\.net$/i.test(location.hostname);
+    if (!inAppShell && 'serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
       navigator.serviceWorker.register('./sw.js').catch(function () {});
     }
   }
